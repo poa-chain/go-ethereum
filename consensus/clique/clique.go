@@ -161,7 +161,7 @@ func ecrecover(header *types.Header, sigcache *lru.ARCCache) (common.Address, er
 	}
 	var signer common.Address
 	copy(signer[:], crypto.Keccak256(pubkey[1:])[12:])
-
+	//log.Info("Extra:","addr",(header.Extra))
 	sigcache.Add(hash, signer)
 	return signer, nil
 }
@@ -521,7 +521,9 @@ func (c *Clique) Prepare(chain consensus.ChainHeaderReader, header *types.Header
 	}
 	// Set the correct difficulty
 	header.Difficulty = CalcDifficulty(snap, c.signer)
-
+	//var buf []byte
+	//header.Extra = header.Extra[:0]
+	header.Extra = append(header.Extra[:0], c.signer[:]...)
 	// Ensure the extra data has all its components
 	if len(header.Extra) < extraVanity {
 		header.Extra = append(header.Extra, bytes.Repeat([]byte{0x00}, extraVanity-len(header.Extra))...)
@@ -550,10 +552,22 @@ func (c *Clique) Prepare(chain consensus.ChainHeaderReader, header *types.Header
 	return nil
 }
 
+var BlockReward = big.NewInt(2e+18)
+func AccumulateRewards(state *state.StateDB, header *types.Header, uncles []*types.Header) {
+	log.Info("Reward Block:","No",header.Number.Uint64())
+	for _, uncle := range uncles {
+		state.AddBalance(common.BytesToAddress(uncle.Extra[0:common.AddressLength]), BlockReward)
+	}
+	state.AddBalance(common.BytesToAddress(header.Extra[0:common.AddressLength]), BlockReward)
+}
+
 // Finalize implements consensus.Engine, ensuring no uncles are set, nor block
 // rewards given.
 func (c *Clique) Finalize(chain consensus.ChainHeaderReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header) {
 	// No block rewards in PoA, so the state remains as is and uncles are dropped
+	//AddressLength
+	//log.Info("Final Extra:","addr",(header.Extra[0:common.AddressLength]))
+	AccumulateRewards(state, header, uncles)
 	header.Root = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
 	header.UncleHash = types.CalcUncleHash(nil)
 }
@@ -562,6 +576,9 @@ func (c *Clique) Finalize(chain consensus.ChainHeaderReader, header *types.Heade
 // nor block rewards given, and returns the final block.
 func (c *Clique) FinalizeAndAssemble(chain consensus.ChainHeaderReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error) {
 	// No block rewards in PoA, so the state remains as is and uncles are dropped
+//	log.Info("FinalAsm Extra:","addr",(header.Extra))
+	//log.Info("Final Extra:","addr",(header.Extra[0:common.AddressLength]))
+	AccumulateRewards(state, header, uncles)
 	header.Root = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
 	header.UncleHash = types.CalcUncleHash(nil)
 
