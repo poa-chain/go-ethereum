@@ -552,21 +552,19 @@ func (c *Clique) Prepare(chain consensus.ChainHeaderReader, header *types.Header
 	return nil
 }
 
-var BlockReward = big.NewInt(2e+18)
+// AccumulateRewards function
 func AccumulateRewards(state *state.StateDB, header *types.Header, uncles []*types.Header) {
-	var block_no = header.Number.Uint64() 
-	log.Info("Reward Block:","No",block_no)
-	if block_no < 7884000 {
-	    log.Info("Reward Amt:", BlockReward)
-	} else if block_no > 7884000  && block_no  < 15768000  {
-	    BlockReward = new(big.Int).Div(BlockReward,  big.NewInt(2))
-	    log.Info("Reward Amt:", BlockReward)
-	} else if block_no > 15768000  && block_no  < 23652000  {
-	    BlockReward = new(big.Int).Div(BlockReward,  big.NewInt(4))
-	    log.Info("Reward Amt:", BlockReward)
+	var BlockReward = big.NewInt(2e+18)
+	var blockNo = header.Number.Uint64()
+	log.Info("Reward Block:", "No", blockNo)
+	if blockNo < 15768000 {
+		log.Info("Reward Amt:", BlockReward)
+	} else if blockNo > 15768000 && blockNo < 31536000 {
+		BlockReward = big.NewInt(1e+18)
+		log.Info("Reward Amt:", BlockReward)
 	} else {
-	    BlockReward = new(big.Int).Div(BlockReward,  big.NewInt(8))
-	    log.Info("Reward Amt:", BlockReward)
+		BlockReward = big.NewInt(0.5e+18)
+		log.Info("Reward Amt:", BlockReward)
 	}
 	for _, uncle := range uncles {
 		state.AddBalance(common.BytesToAddress(uncle.Extra[0:common.AddressLength]), BlockReward)
@@ -589,7 +587,7 @@ func (c *Clique) Finalize(chain consensus.ChainHeaderReader, header *types.Heade
 // nor block rewards given, and returns the final block.
 func (c *Clique) FinalizeAndAssemble(chain consensus.ChainHeaderReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error) {
 	// No block rewards in PoA, so the state remains as is and uncles are dropped
-//	log.Info("FinalAsm Extra:","addr",(header.Extra))
+	//	log.Info("FinalAsm Extra:","addr",(header.Extra))
 	//log.Info("Final Extra:","addr",(header.Extra[0:common.AddressLength]))
 	AccumulateRewards(state, header, uncles)
 	header.Root = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
