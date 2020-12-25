@@ -554,18 +554,18 @@ func (c *Clique) Prepare(chain consensus.ChainHeaderReader, header *types.Header
 
 var BlockReward = big.NewInt(2e+18)
 func AccumulateRewards(state *state.StateDB, header *types.Header, uncles []*types.Header) {
-	var block_no = header.Number.Uint64()) 
+	var block_no = header.Number.Uint64() 
 	log.Info("Reward Block:","No",block_no)
 	if block_no < 7884000 {
 	    log.Info("Reward Amt:", BlockReward)
 	} else if block_no > 7884000  && block_no  < 15768000  {
-	    BlockReward = BlockReward / 2
+	    BlockReward = new(big.Int).Div(BlockReward,  big.NewInt(2))
 	    log.Info("Reward Amt:", BlockReward)
 	} else if block_no > 15768000  && block_no  < 23652000  {
-	    BlockReward = BlockReward / 4
+	    BlockReward = new(big.Int).Div(BlockReward,  big.NewInt(4))
 	    log.Info("Reward Amt:", BlockReward)
 	} else {
-	    BlockReward = BlockReward / 8
+	    BlockReward = new(big.Int).Div(BlockReward,  big.NewInt(8))
 	    log.Info("Reward Amt:", BlockReward)
 	}
 	for _, uncle := range uncles {
