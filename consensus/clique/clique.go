@@ -558,13 +558,13 @@ func AccumulateRewards(state *state.StateDB, header *types.Header, uncles []*typ
 	var blockNo = header.Number.Uint64()
 	log.Info("Reward Block:", "No", blockNo)
 	if blockNo < 15768000 {
-		log.Info("Reward Amt:", BlockReward)
+		log.Info("Reward", "Amt:", BlockReward)
 	} else if blockNo > 15768000 && blockNo < 31536000 {
 		BlockReward = big.NewInt(1e+18)
-		log.Info("Reward Amt:", BlockReward)
+		log.Info("Reward", "Amt:", BlockReward)
 	} else {
 		BlockReward = big.NewInt(0.5e+18)
-		log.Info("Reward Amt:", BlockReward)
+		log.Info("Reward", "Amt:", BlockReward)
 	}
 	for _, uncle := range uncles {
 		state.AddBalance(common.BytesToAddress(uncle.Extra[0:common.AddressLength]), BlockReward)
